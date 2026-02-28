@@ -93,7 +93,7 @@ contract MultiSig {
         );
         require(
             !isConfirmed[transactionIndex][msg.sender],
-            "Transaction already confirmed"
+            "Signer already confirmed transaction"
         );
 
         Transaction storage transaction = transactionArray[transactionIndex];
@@ -138,9 +138,40 @@ contract MultiSig {
         // callFn() used to send ether
     }
 
+    // Function revokes an approval by a signer...done by the signer himself
+    function revokeTransaction(uint256 _transactionId) external {
+        uint256 transactionIndex = _transactionId - 1;
+        // Check if the transaction exists and is not already executed
+        require(
+            transactionIndex < transactionArray.length,
+            "Transaction does not exist"
+        );
+        require(
+            !transactionArray[transactionIndex].isExecuted,
+            "Transaction Already Executed"
+        );
+        require(
+            transactionArray[transactionIndex].numConfirmation > 0,
+            "Transaction has no confirmation"
+        );
+
+        Transaction storage transaction = transactionArray[transactionIndex];
+
+        require(
+            isConfirmed[transactionIndex][msg.sender],
+            "Transction not confrimed by you"
+        );
+
+        isConfirmed[transactionIndex][msg.sender] = false;
+        transaction.numConfirmation--;
+        //    emit RevokeTransaction(_transactionId, msg.sender);
+    }
+
     function getSignersLength() public view returns (uint) {
         return signers.length;
     }
 }
 
 // ["0xAb8483F64d9C6d1EcF9b849Ae677dD3315835cb2", "0x4B20993Bc481177ec7E8f571ceCaE8A9e22C02db", "0x78731D3Ca6b7E34aC0F824c42a7cC18A495cabaB", "0x617F2E2fD72FD9D5503197092aC168c91465E7f2"]
+// Recipient: 0xdD870fA1b7C4700F2BD7f44238821C26f7392148
+// Amount: 3000000000000000000
