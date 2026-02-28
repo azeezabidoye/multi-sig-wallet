@@ -30,10 +30,7 @@ contract MultiSig {
 
     constructor(address[] memory _signers, uint256 _requiredSigners) {
         require(_requiredSigners > 0, "Signers required");
-        require(
-            _requiredSigners <= _signers.length,
-            "Required signers should me less than total signers"
-        );
+        require(_requiredSigners <= _signers.length, "Required signers should me less than total signers");
 
         // set deployer
         deployer = msg.sender;
@@ -43,11 +40,8 @@ contract MultiSig {
         // Set required signers
         requiredSigners = _requiredSigners;
         // Add other signers
-        for (uint i; i < _signers.length; i++) {
-            require(
-                _signers[i] != address(0),
-                "Signer address can not be zero"
-            );
+        for (uint256 i; i < _signers.length; i++) {
+            require(_signers[i] != address(0), "Signer address can not be zero");
             require(!isSigner[_signers[i]], "Signer already added");
             signers.push(_signers[i]);
             isSigner[_signers[i]] = true;
@@ -83,18 +77,9 @@ contract MultiSig {
 
         require(isSigner[msg.sender], "Not an approved signer");
         require(msg.sender != address(0), "Invalid address");
-        require(
-            _transactionId <= transactionArray.length,
-            "Invalid transaction Id"
-        );
-        require(
-            !transactionArray[transactionIndex].isExecuted,
-            "Transaction already executed"
-        );
-        require(
-            !isConfirmed[transactionIndex][msg.sender],
-            "Signer already confirmed transaction"
-        );
+        require(_transactionId <= transactionArray.length, "Invalid transaction Id");
+        require(!transactionArray[transactionIndex].isExecuted, "Transaction already executed");
+        require(!isConfirmed[transactionIndex][msg.sender], "Signer already confirmed transaction");
 
         Transaction storage transaction = transactionArray[transactionIndex];
         transaction.numConfirmation += 1;
@@ -106,33 +91,18 @@ contract MultiSig {
 
         require(isSigner[msg.sender], "Not an approved signer");
         require(msg.sender != address(0), "Invalid address");
-        require(
-            _transactionId <= transactionArray.length,
-            "Invalid transaction Id"
-        );
-        require(
-            !transactionArray[transactionIndex].isExecuted,
-            "Transaction already executed"
-        );
+        require(_transactionId <= transactionArray.length, "Invalid transaction Id");
+        require(!transactionArray[transactionIndex].isExecuted, "Transaction already executed");
 
         // Get the transaction from storage
         Transaction storage transaction = transactionArray[transactionIndex];
 
         // Check if NumConfirmation is equal or greater than required signers
-        require(
-            transactionArray[transactionIndex].numConfirmation >=
-                requiredSigners,
-            "Transaction not confirmed"
-        );
+        require(transactionArray[transactionIndex].numConfirmation >= requiredSigners, "Transaction not confirmed");
 
-        require(
-            address(this).balance > transactionArray[transactionIndex].amount,
-            "Insufficient balance"
-        );
+        require(address(this).balance > transactionArray[transactionIndex].amount, "Insufficient balance");
 
-        (bool success, ) = transaction.recipient.call{
-            value: transaction.amount
-        }("");
+        (bool success,) = transaction.recipient.call{value: transaction.amount}("");
         require(success, "Transaction failed");
         // isExecute turns to true
         // callFn() used to send ether
@@ -142,32 +112,20 @@ contract MultiSig {
     function revokeTransaction(uint256 _transactionId) external {
         uint256 transactionIndex = _transactionId - 1;
         // Check if the transaction exists and is not already executed
-        require(
-            transactionIndex < transactionArray.length,
-            "Transaction does not exist"
-        );
-        require(
-            !transactionArray[transactionIndex].isExecuted,
-            "Transaction Already Executed"
-        );
-        require(
-            transactionArray[transactionIndex].numConfirmation > 0,
-            "Transaction has no confirmation"
-        );
+        require(transactionIndex < transactionArray.length, "Transaction does not exist");
+        require(!transactionArray[transactionIndex].isExecuted, "Transaction Already Executed");
+        require(transactionArray[transactionIndex].numConfirmation > 0, "Transaction has no confirmation");
 
         Transaction storage transaction = transactionArray[transactionIndex];
 
-        require(
-            isConfirmed[transactionIndex][msg.sender],
-            "Transction not confrimed by you"
-        );
+        require(isConfirmed[transactionIndex][msg.sender], "Transction not confrimed by you");
 
         isConfirmed[transactionIndex][msg.sender] = false;
         transaction.numConfirmation--;
         //    emit RevokeTransaction(_transactionId, msg.sender);
     }
 
-    function getSignersLength() public view returns (uint) {
+    function getSignersLength() public view returns (uint256) {
         return signers.length;
     }
 }
